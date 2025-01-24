@@ -31,6 +31,7 @@ func NewModel(
 	ctx *context.ProgramContext,
 	cfg config.PrsSectionConfig,
 	lastUpdated time.Time,
+	createdAt time.Time,
 ) Model {
 	m := Model{}
 	m.BaseModel = section.NewModel(
@@ -43,6 +44,7 @@ func NewModel(
 			Singular:    m.GetItemSingularForm(),
 			Plural:      m.GetItemPluralForm(),
 			LastUpdated: lastUpdated,
+			CreatedAt:   createdAt,
 		},
 	)
 	m.Prs = []data.PullRequestData{}
@@ -88,7 +90,7 @@ func (m Model) Update(msg tea.Msg) (section.Section, tea.Cmd) {
 				input := m.PromptConfirmationBox.Value()
 				action := m.GetPromptConfirmationAction()
 				pr := m.GetCurrRow()
-				sid := tasks.SectionIdentifer{Id: m.Id, Type: SectionType}
+				sid := tasks.SectionIdentifier{Id: m.Id, Type: SectionType}
 				if input == "Y" || input == "y" {
 					switch action {
 					case "close":
@@ -203,6 +205,10 @@ func GetSectionColumns(
 		dLayout.UpdatedAt,
 		sLayout.UpdatedAt,
 	)
+	createdAtLayout := config.MergeColumnConfigs(
+		dLayout.CreatedAt,
+		sLayout.CreatedAt,
+	)
 	repoLayout := config.MergeColumnConfigs(dLayout.Repo, sLayout.Repo)
 	titleLayout := config.MergeColumnConfigs(dLayout.Title, sLayout.Title)
 	authorLayout := config.MergeColumnConfigs(dLayout.Author, sLayout.Author)
@@ -258,9 +264,14 @@ func GetSectionColumns(
 				Hidden: linesLayout.Hidden,
 			},
 			{
-				Title:  "",
+				Title:  "󱦻",
 				Width:  updatedAtLayout.Width,
 				Hidden: updatedAtLayout.Hidden,
+			},
+			{
+				Title:  "󱡢",
+				Width:  createdAtLayout.Width,
+				Hidden: createdAtLayout.Hidden,
 			},
 		}
 	}
@@ -313,9 +324,14 @@ func GetSectionColumns(
 			Hidden: linesLayout.Hidden,
 		},
 		{
-			Title:  "",
+			Title:  "󱦻",
 			Width:  updatedAtLayout.Width,
 			Hidden: updatedAtLayout.Hidden,
+		},
+		{
+			Title:  "󱡢",
+			Width:  createdAtLayout.Width,
+			Hidden: createdAtLayout.Hidden,
 		},
 	}
 }
@@ -433,7 +449,7 @@ func (m *Model) ResetRows() {
 }
 
 func FetchAllSections(
-	ctx context.ProgramContext,
+	ctx *context.ProgramContext,
 	prs []section.Section,
 ) (sections []section.Section, fetchAllCmd tea.Cmd) {
 	fetchPRsCmds := make([]tea.Cmd, 0, len(ctx.Config.PRSections))
@@ -441,8 +457,9 @@ func FetchAllSections(
 	for i, sectionConfig := range ctx.Config.PRSections {
 		sectionModel := NewModel(
 			i+1, // 0 is the search section
-			&ctx,
+			ctx,
 			sectionConfig,
+			time.Now(),
 			time.Now(),
 		)
 		if len(prs) > 0 && len(prs) >= i+1 && prs[i+1] != nil {

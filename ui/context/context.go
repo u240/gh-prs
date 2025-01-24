@@ -29,8 +29,8 @@ type Task struct {
 }
 
 type ProgramContext struct {
-	RepoPath          *string
-	RepoUrl           *string
+	RepoPath          string
+	RepoUrl           string
 	User              string
 	ScreenHeight      int
 	ScreenWidth       int
@@ -38,6 +38,7 @@ type ProgramContext struct {
 	MainContentHeight int
 	Config            *config.Config
 	ConfigPath        string
+	Version           string
 	View              config.ViewType
 	Error             error
 	StartTask         func(task Task) tea.Cmd

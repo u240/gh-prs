@@ -29,7 +29,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m Model) View(ctx context.ProgramContext) string {
+func (m Model) View(ctx *context.ProgramContext) string {
 	sectionTitles := make([]string, 0, len(m.sectionsConfigs))
 	for i, section := range m.sectionsConfigs {
 		title := section.Title
@@ -49,15 +49,17 @@ func (m Model) View(ctx context.ProgramContext) string {
 		}
 	}
 
+	version := lipgloss.NewStyle().Foreground(ctx.Theme.SecondaryText).Render(ctx.Version)
+
 	renderedTabs := lipgloss.NewStyle().
-		Width(ctx.ScreenWidth).
-		MaxWidth(ctx.ScreenWidth).
+		Width(ctx.ScreenWidth - lipgloss.Width(version)).
+		MaxWidth(ctx.ScreenWidth - lipgloss.Width(version)).
 		Render(lipgloss.JoinHorizontal(lipgloss.Top, strings.Join(tabs, ctx.Styles.Tabs.TabSeparator.Render("|"))))
 
 	return ctx.Styles.Tabs.TabsRow.
 		Width(ctx.ScreenWidth).
 		MaxWidth(ctx.ScreenWidth).
-		Render(renderedTabs)
+		Render(lipgloss.JoinHorizontal(lipgloss.Center, renderedTabs, version))
 }
 
 func (m *Model) SetCurrSectionId(id int) {

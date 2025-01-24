@@ -68,6 +68,7 @@ type ColumnConfig struct {
 
 type PrsLayoutConfig struct {
 	UpdatedAt    ColumnConfig `yaml:"updatedAt,omitempty"`
+	CreatedAt    ColumnConfig `yaml:"createdAt,omitempty"`
 	Repo         ColumnConfig `yaml:"repo,omitempty"`
 	Author       ColumnConfig `yaml:"author,omitempty"`
 	Assignees    ColumnConfig `yaml:"assignees,omitempty"`
@@ -81,6 +82,7 @@ type PrsLayoutConfig struct {
 
 type IssuesLayoutConfig struct {
 	UpdatedAt ColumnConfig `yaml:"updatedAt,omitempty"`
+	CreatedAt ColumnConfig `yaml:"createdAt,omitempty"`
 	State     ColumnConfig `yaml:"state,omitempty"`
 	Repo      ColumnConfig `yaml:"repo,omitempty"`
 	Title     ColumnConfig `yaml:"title,omitempty"`
@@ -222,6 +224,9 @@ func (parser ConfigParser) getDefaultConfig() Config {
 					UpdatedAt: ColumnConfig{
 						Width: utils.IntPtr(lipgloss.Width("2mo  ")),
 					},
+					CreatedAt: ColumnConfig{
+						Width: utils.IntPtr(lipgloss.Width("2mo  ")),
+					},
 					Repo: ColumnConfig{
 						Width: utils.IntPtr(20),
 					},
@@ -242,6 +247,9 @@ func (parser ConfigParser) getDefaultConfig() Config {
 				},
 				Issues: IssuesLayoutConfig{
 					UpdatedAt: ColumnConfig{
+						Width: utils.IntPtr(lipgloss.Width("2mo  ")),
+					},
+					CreatedAt: ColumnConfig{
 						Width: utils.IntPtr(lipgloss.Width("2mo  ")),
 					},
 					Repo: ColumnConfig{
@@ -337,7 +345,6 @@ func (parser ConfigParser) writeDefaultConfigContents(
 	newConfigFile *os.File,
 ) error {
 	_, err := newConfigFile.WriteString(parser.getDefaultConfigYamlContents())
-
 	if err != nil {
 		return err
 	}
@@ -365,7 +372,7 @@ func (parser ConfigParser) createConfigFileIfMissing(
 	return nil
 }
 
-func (parser ConfigParser) getDefaultConfigFileOrCreateIfMissing(repoPath *string) (string, error) {
+func (parser ConfigParser) getDefaultConfigFileOrCreateIfMissing(repoPath string) (string, error) {
 	var configFilePath string
 	ghDashConfig := os.Getenv("GH_DASH_CONFIG")
 
@@ -373,8 +380,8 @@ func (parser ConfigParser) getDefaultConfigFileOrCreateIfMissing(repoPath *strin
 	if ghDashConfig != "" {
 		configFilePath = ghDashConfig
 		// Then try to see if we're currently in a git repo
-	} else if repoPath != nil {
-		basename := *repoPath + "/." + DashDir
+	} else if repoPath != "" {
+		basename := repoPath + "/." + DashDir
 		repoConfigYml := basename + ".yml"
 		repoConfigYaml := basename + ".yaml"
 		if _, err := os.Stat(repoConfigYml); err == nil {
@@ -463,7 +470,7 @@ func initParser() ConfigParser {
 	return ConfigParser{}
 }
 
-func ParseConfig(path string, repoPath *string) (Config, error) {
+func ParseConfig(path string, repoPath string) (Config, error) {
 	parser := initParser()
 
 	var config Config
